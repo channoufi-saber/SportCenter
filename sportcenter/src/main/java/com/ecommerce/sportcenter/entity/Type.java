@@ -30,6 +30,5 @@ public class Type {
     private String name;
 
     @OneToMany(mappedBy = "type", fetch = FetchType.LAZY)
-    private List<Type> types;
-
+    private List<Product> products;
 }
