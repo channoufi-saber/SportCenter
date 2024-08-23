@@ -6,6 +6,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import com.ecommerce.sportcenter.entity.Product;
+import com.ecommerce.sportcenter.exceptions.ProductNotFoundException;
 import com.ecommerce.sportcenter.model.ProductResponse;
 import com.ecommerce.sportcenter.repository.ProductRepository;
 
@@ -25,7 +26,7 @@ public class ProductServiceImpl implements ProductService {
 	public ProductResponse getProductById(Integer productId) {
 		log.info("fetching Product by Id: {}", productId);
 		Product product = productRepository.findById(productId)
-				.orElseThrow(() -> new RuntimeException("Product doesn't exist"));
+				.orElseThrow(() -> new ProductNotFoundException("Product doesn't exist"));
 		ProductResponse productResponse = convertToProductResponse(product);
 		log.info("Fetched Product by Product Id:{}", productId);
 		return productResponse;
@@ -33,23 +34,26 @@ public class ProductServiceImpl implements ProductService {
 	}
 
 	@Override
-    public Page<ProductResponse> getProducts(Pageable pageable, Integer brandId, Integer typeId, String keyword) {
-        Specification<Product> spec = Specification.where(null);
+	public Page<ProductResponse> getProducts(Pageable pageable, Integer brandId, Integer typeId, String keyword) {
+		Specification<Product> spec = Specification.where(null);
 
-        if (brandId != null) {
-            spec = spec.and((root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("brand").get("id"), brandId));
-        }
+		if (brandId != null) {
+			spec = spec
+					.and((root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("brand").get("id"), brandId));
+		}
 
-        if (typeId != null) {
-            spec = spec.and((root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("type").get("id"), typeId));
-        }
+		if (typeId != null) {
+			spec = spec
+					.and((root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("type").get("id"), typeId));
+		}
 
-        if (keyword != null && !keyword.isEmpty()) {
-            spec = spec.and((root, query, criteriaBuilder) -> criteriaBuilder.like(root.get("name"), "%" + keyword + "%"));
-        }
+		if (keyword != null && !keyword.isEmpty()) {
+			spec = spec
+					.and((root, query, criteriaBuilder) -> criteriaBuilder.like(root.get("name"), "%" + keyword + "%"));
+		}
 
-        return productRepository.findAll(spec, pageable).map(this::convertToProductResponse);
-    }
+		return productRepository.findAll(spec, pageable).map(this::convertToProductResponse);
+	}
 
 	private ProductResponse convertToProductResponse(Product product) {
 		return ProductResponse.builder().id(product.getId()).name(product.getName())
